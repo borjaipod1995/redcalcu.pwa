@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f1117" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Reductores" />
+  <meta name="description" content="Calculadora de reductores mecánicos industriales" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>Reductores Industriales</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #171b25;
+      --surface2: #1e2330;
+      --border: #2a3045;
+      --accent: #f0a500;
+      --accent2: #e05c2a;
+      --text: #e8eaf0;
+      --muted: #7a8099;
+      --success: #2ecc71;
+      --warning: #f0a500;
+      --info: #3b9ede;
+      --danger: #e74c3c;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-sans: 'IBM Plex Sans', sans-serif;
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-sans); overflow-x: hidden; }
+
+    /* HEADER */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .header-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-icon svg { width: 18px; height: 18px; fill: #000; }
+    .header-title { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: 0.05em; }
+    .header-sub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .tab {
+      flex: 1; padding: 11px 8px; font-family: var(--font-mono); font-size: 11px;
+      font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--muted); border: none; background: none; cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* CONTENT */
+    .page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .card-header {
+      display: flex; align-items: baseline; gap: 10px;
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+    .card-formula { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+    /* FIELDS */
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-family: var(--font-mono); font-size: 11px;
+      color: var(--muted); letter-spacing: 0.05em; margin-bottom: 5px; text-transform: uppercase;
+    }
+    .field input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 12px;
+      font-family: var(--font-mono); font-size: 15px; font-weight: 500;
+      color: var(--text); outline: none; transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--accent); }
+    .field input.auto { border-color: var(--info); color: var(--info); }
+    .field input.defaulted { border-color: var(--warning); color: var(--warning); }
+    .field .hint { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* BUTTON */
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: var(--radius);
+      font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:active { transform: scale(0.98); background: #d49200; }
+    .btn-ia { background: var(--surface2); color: var(--text); border: 1px solid var(--border); margin-top: 12px; }
+    .btn-ia:active { transform: scale(0.98); }
+
+    /* RESULTS */
+    .results { margin-top: 14px; display: none; }
+    .results.visible { display: block; }
+    .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .res-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px;
+    }
+    .res-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }
+    .res-val { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--accent); }
+    .res-val.na { color: var(--muted); font-size: 16px; font-style: italic; font-weight: 400; }
+    .res-unit { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* TAGS */
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .tag { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.03em; }
+    .tag-ok { background: rgba(46,204,113,0.12); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
+    .tag-warn { background: rgba(240,165,0,0.12); color: var(--warning); border: 1px solid rgba(240,165,0,0.3); }
+
+    /* AI BOX */
+    .ai-out {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      font-family: var(--font-sans); font-size: 13px; line-height: 1.7;
+      color: var(--text); margin-top: 10px; display: none;
+      white-space: pre-wrap;
+    }
+    .ai-out.visible { display: block; }
+
+    /* DIVIDER */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+    /* INSTALL BANNER */
+    .install-banner {
+      background: var(--surface2); border: 1px solid var(--accent);
+      border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
+      display: none;
+    }
+    .install-banner.visible { display: flex; align-items: center; gap: 12px; }
+    .install-text { flex: 1; font-size: 12px; color: var(--text); line-height: 1.5; }
+    .install-text strong { color: var(--accent); font-family: var(--font-mono); font-size: 11px; }
+    .btn-install { background: var(--accent); color: #000; border: none; border-radius: var(--radius); padding: 8px 14px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+
+    /* INFO PAGE */
+    .info-block { margin-bottom: 20px; }
+    .info-block h3 { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .formula-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-family: var(--font-mono); font-size: 13px; color: var(--info); margin-bottom: 8px; }
+    .formula-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .version-badge { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-align: center; padding: 20px 0 8px; letter-spacing: 0.08em; }
+
+    @media (max-width: 360px) {
+      .res-val { font-size: 18px; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+
+    .dot-anim::after { content: '●'; animation: blink 1s infinite; display: inline-block; margin-left: 6px; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+  </div>
+  <div>
+    <div class="header-title">Reductores Mecánicos</div>
+    <div class="header-sub">Calculadora industrial</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('fuerzas', this)">⚙ Fuerzas / Par</button>
+  <button class="tab" onclick="showTab('velocidad', this)">◎ Velocidad</button>
+  <button class="tab" onclick="showTab('info', this)">ℹ Info</button>
+</div>
+
+<!-- ===== TAB FUERZAS ===== -->
+<div id="tab-fuerzas" class="page active">
+  <div id="install-banner" class="install-banner">
+    <div class="install-text"><strong>INSTALAR APP</strong><br>Añade esta herramienta a tu pantalla de inicio para usarla sin internet.</div>
+    <button class="btn-install" onclick="installApp()">Instalar</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Par de torsión</span>
+      <span class="card-formula">M = F · R · r</span>
+    </div>
+
+    <div class="field">
+      <label>Fuerza (F)</label>
+      <input type="number" id="f-fuerza" inputmode="decimal" placeholder="0" step="any" />
+      <div class="hint">kg → se convierte a N automáticamente</div>
+    </div>
+
+    <div class="field">
+      <label>Coef. rozamiento (R)</label>
+      <input type="number" id="f-roz" inputmode="decimal" placeholder="sin dato → usa 1" step="any" oninput="clearDef('f-roz')" />
+      <div class="hint">adimensional · si se deja vacío se aplica R = 1</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Radio (r)</label>
+        <input type="number" id="f-radio" inputmode="decimal" placeholder="mm" step="any" oninput="syncFuerzas('radio')" />
+        <div class="hint">mm</div>
+      </div>
+      <div class="field">
+        <label>Diámetro (d)</label>
+        <input type="number" id="f-diam" inputmode="decimal" placeholder="mm" step="any" oninput="syncFuerzas('diam')" />
+        <div class="hint">mm</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="calcFuerzas()">Calcular par →</button>
+
+    <div class="results" id="f-results">
+      <hr class="divider" />
+      <div class="res-grid">
+        <div class="res-box">
+          <div class="res-label">Par (M)</div>
+          <div class="res-val na" id="f-res-m">—</div>
+          <div class="res-unit">Nm</div>
+        </div>
+        <div class="res-box">
+          <div class="res-label">Fuerza aplicada</div>
+          <div class="res-val na" id="f-res-fn">—</div>
+          <div class="res-unit">N</div>
+        </div>
+      </div>
+      <div class="tags" id="f-tags"></div>
+      <button class="btn btn-ia dot-anim" id="btn-ia-f" onclick="analizarIA('fuerzas')">Analizar con IA</button>
+      <div class="ai-out" id="f-ai"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB VELOCIDAD ===== -->
+<div id="tab-velocidad" class="page">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Velocidad</span>
+      <span class="card-formula">V = π · d · n</span>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Diámetro (d)</label>
+        <input type="number" id="v-diam" inputmode="decimal" placeholder="mm" step="any" oninput="syncVel('diam')" />
+        <div class="hint">mm</div>
+      </div>
+      <div class="field">
+        <label>Radio (r)</label>
+        <input type="number" id="v-radio" inputmode="decimal" placeholder="mm" step="any" oninput="syncVel('radio')" />
+        <div class="hint">mm</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Velocidad lineal (V)</label>
+      <input type="number" id="v-vlin" inputmode="decimal" placeholder="m/min" step="any" />
+      <div class="hint">m/min · introduce V para calcular RPM</div>
+    </div>
+
+    <div class="field">
+      <label>RPM (n)</label>
+      <input type="number" id="v-rpm" inputmode="decimal" placeholder="rev/min" step="any" />
+      <div class="hint">rev/min · introduce RPM para calcular V</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="calcVelocidad()">Calcular velocidad →</button>
+
+    <div class="results" id="v-results">
+      <hr class="divider" />
+      <div class="res-grid">
+        <div class="res-box">
+          <div class="res-label">Vel. lineal (V)</div>
+          <div class="res-val na" id="v-res-v">—</div>
+          <div class="res-unit">m/min</div>
+        </div>
+        <div class="res-box">
+          <div class="res-label">RPM (n)</div>
+          <div class="res-val na" id="v-res-rpm">—</div>
+          <div class="res-unit">rev/min</div>
+        </div>
+      </div>
+      <div class="tags" id="v-tags"></div>
+      <button class="btn btn-ia dot-anim" id="btn-ia-v" onclick="analizarIA('velocidad')">Analizar con IA</button>
+      <div class="ai-out" id="v-ai"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB INFO ===== -->
+<div id="tab-info" class="page">
+  <div class="card">
+    <div class="info-block">
+      <h3>Fórmulas utilizadas</h3>
+      <div class="formula-box">M = F · R · r</div>
+      <div class="formula-desc">Par (Nm) = Fuerza (N) · Coef. rozamiento · Radio (m)<br>La fuerza se introduce en kg y se convierte a N (×9,81).<br>El radio/diámetro se introduce en mm y se convierte a m.</div>
+    </div>
+    <div class="info-block">
+      <div class="formula-box">V = π · d · n</div>
+      <div class="formula-desc">Velocidad lineal (m/min) = π · Diámetro (m) · RPM<br>Despejando: n = V / (π · d)</div>
+    </div>
+    <div class="info-block">
+      <h3>Conversiones automáticas</h3>
+      <div class="formula-desc" style="line-height:2;">
+        kg → N : F(N) = F(kg) × 9,81<br>
+        mm → m : valor / 1000<br>
+        radio ↔ diámetro : d = 2r<br>
+        R vacío → R = 1 (sin rozamiento)
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Instalar en Android</h3>
+      <div class="formula-desc" style="line-height:2;">
+        1. Abre esta página en Chrome<br>
+        2. Menú (⋮) → "Añadir a pantalla de inicio"<br>
+        3. Confirma → la app aparece como icono<br>
+        4. Funciona sin conexión a internet
+      </div>
+    </div>
+  </div>
+  <div class="version-badge">v1.0 · Reductores Mecánicos Industriales</div>
+</div>
+
+<script>
+const G = 9.81;
+let sfx = false, svx = false;
+let lastF = null, lastV = null;
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('visible');
+});
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    document.getElementById('install-banner').classList.remove('visible');
+    deferredPrompt = null;
+  });
+}
+
+function showTab(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function vn(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
+function fmt(n, d=2) { return n === null ? null : parseFloat(n.toFixed(d)); }
+function clearDef(id) { document.getElementById(id).classList.remove('defaulted'); }
+
+function setRes(id, val, dec=2) {
+  const el = document.getElementById(id);
+  if (val !== null) { el.textContent = fmt(val, dec); el.classList.remove('na'); }
+  else { el.textContent = '—'; el.classList.add('na'); }
+}
+
+function addTag(container, text, cls) {
+  const t = document.createElement('span');
+  t.className = 'tag ' + cls; t.textContent = text;
+  container.appendChild(t);
+}
+
+function syncFuerzas(from) {
+  if (sfx) return; sfx = true;
+  const r = document.getElementById('f-radio'), d = document.getElementById('f-diam');
+  if (from === 'radio') { const v = parseFloat(r.value); if (!isNaN(v) && v > 0) { d.value = +(v*2).toFixed(4); d.classList.add('auto'); } else { d.value=''; d.classList.remove('auto'); } }
+  else { const v = parseFloat(d.value); if (!isNaN(v) && v > 0) { r.value = +(v/2).toFixed(4); r.classList.add('auto'); } else { r.value=''; r.classList.remove('auto'); } }
+  sfx = false;
+}
+
+function syncVel(from) {
+  if (svx) return; svx = true;
+  const r = document.getElementById('v-radio'), d = document.getElementById('v-diam');
+  if (from === 'radio') { const v = parseFloat(r.value); if (!isNaN(v) && v > 0) { d.value = +(v*2).toFixed(4); d.classList.add('auto'); } else { d.value=''; d.classList.remove('auto'); } }
+  else { const v = parseFloat(d.value); if (!isNaN(v) && v > 0) { r.value = +(v/2).toFixed(4); r.classList.add('auto'); } else { r.value=''; r.classList.remove('auto'); } }
+  svx = false;
+}
+
+function calcFuerzas() {
+  const rozEl = document.getElementById('f-roz');
+  let R = vn('f-roz'), rozDef = false;
+  if (R === null) { R = 1; rozDef = true; rozEl.value = '1'; rozEl.classList.add('defaulted'); }
+  else { rozEl.classList.remove('defaulted'); }
+
+  const F_kg = vn('f-fuerza'), r_mm = vn('f-radio');
+  const F = F_kg !== null ? F_kg * G : null;
+  const r = r_mm !== null ? r_mm / 1000 : null;
+  const M = (F !== null && r !== null) ? F * R * r : null;
+
+  setRes('f-res-m', M); setRes('f-res-fn', F);
+
+  const tags = document.getElementById('f-tags'); tags.innerHTML = '';
+  if (M !== null) addTag(tags, '✓ par calculado', 'tag-ok');
+  if (rozDef) addTag(tags, '⚠ R=1 por defecto', 'tag-warn');
+
+  lastF = { F_kg, r_mm, R, rozDef, M: fmt(M), F_N: fmt(F) };
+  document.getElementById('f-results').classList.add('visible');
+  document.getElementById('f-ai').classList.remove('visible');
+  document.getElementById('f-ai').textContent = '';
+}
+
+function calcVelocidad() {
+  const d_mm = vn('v-diam'), Vin = vn('v-vlin'), nIn = vn('v-rpm');
+  const d = d_mm !== null ? d_mm / 1000 : null;
+  let V = null, n = null;
+
+  const tags = document.getElementById('v-tags'); tags.innerHTML = '';
+  if (nIn !== null && d !== null) { V = Math.PI * d * nIn; addTag(tags, '✓ V calculada desde RPM', 'tag-ok'); }
+  else if (Vin !== null) { V = Vin; }
+  if (Vin !== null && d !== null) { n = Vin / (Math.PI * d); addTag(tags, '✓ RPM calculadas desde V', 'tag-ok'); }
+  else if (nIn !== null) { n = nIn; }
+
+  setRes('v-res-v', V); setRes('v-res-rpm', n, 1);
+  lastV = { d_mm, Vin, nIn, V: fmt(V), n: fmt(n,1) };
+  document.getElementById('v-results').classList.add('visible');
+  document.getElementById('v-ai').classList.remove('visible');
+  document.getElementById('v-ai').textContent = '';
+}
+
+async function analizarIA(modulo) {
+  const aiEl = document.getElementById(modulo === 'fuerzas' ? 'f-ai' : 'v-ai');
+  const btnEl = document.getElementById(modulo === 'fuerzas' ? 'btn-ia-f' : 'btn-ia-v');
+  aiEl.classList.add('visible');
+  aiEl.textContent = 'Analizando datos...';
+  btnEl.disabled = true;
+
+  const f = lastF || {}, v = lastV || {};
+  const prompt = `Eres experto en transmisiones mecánicas industriales. Analiza estos datos de un reductor:
+
+FUERZAS/PAR:
+- Fuerza: ${f.F_kg != null ? f.F_kg+' kg ('+f.F_N+' N)' : 'no introducida'}
+- Radio: ${f.r_mm != null ? f.r_mm+' mm' : 'no introducido'}
+- Rozamiento: ${f.R != null ? f.R+(f.rozDef?' (por defecto)':'') : 'no usado'}
+- Par (M): ${f.M != null ? f.M+' Nm' : 'no calculado'}
+
+VELOCIDAD:
+- Diámetro: ${v.d_mm != null ? v.d_mm+' mm' : 'no introducido'}
+- Vel. lineal: ${v.V != null ? v.V+' m/min' : 'no calculada'}
+- RPM: ${v.n != null ? v.n+' rpm' : 'no calculadas'}
+
+Valida coherencia, comenta valores, sugiere datos adicionales si hacen falta. Español, técnico, máx 140 palabras.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    aiEl.textContent = data.content.map(b => b.text||'').join('');
+  } catch(e) {
+    aiEl.textContent = 'Error al conectar con la IA.';
+  }
+  btnEl.disabled = false;
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+}
+</script>
+</body>
+</html>
